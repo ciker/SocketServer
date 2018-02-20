@@ -3,3 +3,7 @@
 ################################################################################
 
 /SocketServer/obj
+/SocketServer/bin/Debug
+/SocketClient/obj
+/SocketClient/bin/Debug
+/.vs
