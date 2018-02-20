@@ -9,58 +9,59 @@ namespace SocketServer
 {
     class Program
     {
-        static int serverPort = 50000;
+        static int serverPort = 8082;
 
         static IPEndPoint LocalEndPoint
         {
             get
             {
                 IPHostEntry iPHostEntry = Dns.GetHostEntry("localhost");
-                return new IPEndPoint(iPHostEntry.AddressList[0], serverPort);
+                return new IPEndPoint(iPHostEntry.AddressList[1], serverPort);
             }
         }
 
         public static async Task Main(string[] args)
         {
-            var listener = new TcpListener(IPAddress.Any, 50000);
-            listener.Start();
+            var socketServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            socketServer.Bind(LocalEndPoint);
+            socketServer.Listen((int)SocketOptionName.MaxConnections);
 
             Console.WriteLine($"Listening on {LocalEndPoint}");
             while (true)
             {
-                var socket = await listener.AcceptTcpClientAsync();
+                var socket = await Task<Socket>.Factory.FromAsync(socketServer.BeginAccept, socketServer.EndAccept, null);
+
                 await ProcessClient(socket);
             }
         }
 
-        private static async Task ProcessClient(TcpClient client)
+        private static async Task ProcessClient(Socket socket)
         {
-            //Clients.Add(client);
-            var stream = client.GetStream();
-            var buffer = new byte[4 * 1_024];
-
-            string message = "";
-            while (client.Connected)
+            using (var stream = new NetworkStream(socket))
             {
-                try
+
+                string message = "";
+                while (socket.Connected)
                 {
-                    var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
-                    if(bytesRead>0)
+                    var buffer = new byte[4 * 1_024];
+
+                    try
                     {
-                        message = message + Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                        var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+                        if (bytesRead > 0)
+                        {
+                            message = message + Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
                     }
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
+
+                Console.WriteLine(message);
             }
-
-            Console.WriteLine(message);
-
-            //var result = Clients.Remove(client);
         }
 
-        private static List<TcpClient> Clients { get; } = new List<TcpClient>();
     }
 }
