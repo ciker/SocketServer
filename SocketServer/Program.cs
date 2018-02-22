@@ -38,12 +38,12 @@ namespace SocketServer
             while (true)
             {
                 var socket = await listener.AcceptTcpClientAsync().ConfigureAwait(false);
-                await ProcessClient(socket);
+                ProcessClient(socket);
             }
 
         }
 
-        private static async Task ProcessClient(TcpClient client)
+        private static async void ProcessClient(TcpClient client)
         {
             var stream = client.GetStream();
             var buffer = new byte[4 * 1_024];
