@@ -19,7 +19,6 @@ namespace SocketServer
             get
             {
                 IPHostEntry iPHostEntry = Dns.GetHostEntry("localhost");
-                //return new IPEndPoint(iPHostEntry.AddressList[0], serverPort);
                 return new IPEndPoint(iPHostEntry.AddressList[1], serverPort);
             }
         }
@@ -31,18 +30,10 @@ namespace SocketServer
 
             List<Task> tasks = new List<Task>(20);
 
-            //Setup Producers - To Produce Tasks and Associated Action
-            TaskProducer producerOne = new TaskProducer(TaskQueue);
-
             var listener = new TcpListener(LocalEndPoint);
             listener.Start();
 
             Console.WriteLine($"Listening on {LocalEndPoint}");
-
-            //for (int i=0; i<tasks.Count; i++)
-            //{
-            //    tasks.Add(Task.Run(() => TaskQueue.DequeueTask()));
-            //}
 
             while (true)
             {
@@ -52,40 +43,41 @@ namespace SocketServer
 
         }
 
-        private static async Task WorkQueue_TaskStatus(TaskProcessingArguments e)
-        {
-            await TaskQueue.DequeueTask();
-        }
-
         private static async Task ProcessClient(TcpClient client)
         {
             var stream = client.GetStream();
             var buffer = new byte[4 * 1_024];
 
             string message = "";
-            //while (client.Connected)
+
+            try
             {
-                try
+                var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
+                if (bytesRead > 0)
                 {
-                    var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
-                    if (bytesRead > 0)
-                    {
-                        message = message + Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                    }
-
-                    TaskQueue.Enqueue(() =>
-                    {
-                        Console.WriteLine($"Task Dequeued: {message}");
-                    });
-
+                    message = message + Encoding.UTF8.GetString(buffer, 0, bytesRead);
                 }
-                catch (Exception ex)
+
+                TaskQueue.Enqueue(async () =>
                 {
-                    Console.WriteLine(ex.Message);
-                }
+                    //some long running task
+                    await Task.Delay(1000);
+
+                    Console.WriteLine($"Task Dequeued: {message}");
+                });
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
 
             Console.WriteLine(message);
+        }
+
+        private static void WorkQueue_TaskStatus(TaskProcessingArguments e)
+        {
+            TaskQueue.DequeueTask();
         }
     }
 }
