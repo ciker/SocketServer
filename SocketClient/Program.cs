@@ -22,7 +22,6 @@ namespace SocketClient
 
         static async Task Main(string[] args)
         {
-            await Task.Delay(1000);
             int i = 0;
             while (true)
             {
@@ -43,7 +42,7 @@ namespace SocketClient
                     }
                 }
 
-                    await Task.Delay(1000);
+                await Task.Delay(1);
 
                 i++;
             }

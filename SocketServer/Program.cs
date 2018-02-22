@@ -12,7 +12,7 @@ namespace SocketServer
     {
         static int serverPort = 8082;
 
-        static TaskQueue TaskQueue= new TaskQueue(new ConcurrentQueue<Task>(), 1000, 10);
+        static TaskQueue TaskQueue = new TaskQueue(new ConcurrentQueue<Task>(), 10000, 10);
 
         static IPEndPoint LocalEndPoint
         {
@@ -46,19 +46,19 @@ namespace SocketServer
 
             while (true)
             {
-                var socket = await listener.AcceptTcpClientAsync();
+                var socket = await listener.AcceptTcpClientAsync().ConfigureAwait(false);
                 await ProcessClient(socket);
             }
+
         }
 
-        private static Task WorkQueue_TaskStatus(TaskProcessingArguments e)
+        private static async Task WorkQueue_TaskStatus(TaskProcessingArguments e)
         {
-            return Task.FromResult(0);
+            await TaskQueue.DequeueTask();
         }
 
         private static async Task ProcessClient(TcpClient client)
         {
-            Clients.Add(client);
             var stream = client.GetStream();
             var buffer = new byte[4 * 1_024];
 
@@ -67,7 +67,7 @@ namespace SocketServer
             {
                 try
                 {
-                    var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+                    var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
                     if (bytesRead > 0)
                     {
                         message = message + Encoding.UTF8.GetString(buffer, 0, bytesRead);
@@ -78,7 +78,6 @@ namespace SocketServer
                         Console.WriteLine($"Task Dequeued: {message}");
                     });
 
-                    Task.Run(() => TaskQueue.DequeueTask());
                 }
                 catch (Exception ex)
                 {
@@ -87,10 +86,6 @@ namespace SocketServer
             }
 
             Console.WriteLine(message);
-
-            var result = Clients.Remove(client);
         }
-
-        private static List<TcpClient> Clients { get; } = new List<TcpClient>();
     }
 }

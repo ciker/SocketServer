@@ -18,11 +18,11 @@ namespace SocketServer
         public void ProduceTasks(Action action)
         {
                 // Prepare Queue Object (Hold the Test Data)
-                var queue = new QueuedObject
-                {
-                    ProducerThreadID = Thread.CurrentThread.ManagedThreadId,
-                    EnqueueDateTime = DateTime.Now,
-                };
+                //var queue = new QueuedObject
+                //{
+                //    ProducerThreadID = Thread.CurrentThread.ManagedThreadId,
+                //    EnqueueDateTime = DateTime.Now,
+                //};
 
                 // Add Task to Queue with Action
                 _taskQueue.Enqueue(action);
