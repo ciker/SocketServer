@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using SocketServer.Protocols;
+using System;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -22,14 +24,32 @@ namespace SocketClient
 
                     if(client.Connected)
                     {
-                        string reqNo = $"request no: {i}";
-                        Console.WriteLine(reqNo);
+                        var protocol = new Protocol
+                        {
+                            Id = Guid.NewGuid().ToString()
+                        };
+
+                        string serialized = JsonConvert.SerializeObject(protocol);
+
+                        //string reqNo = $"request no: {Guid.NewGuid()}";
+                        Console.WriteLine(serialized);
 
                         var stream = client.GetStream();
 
-                        var data = Encoding.ASCII.GetBytes(reqNo);
+                        var data = Encoding.ASCII.GetBytes(serialized);
 
                         await stream.WriteAsync(data, 0, data.Length);
+
+                        if(client.ReceiveBufferSize>0)
+                        {
+                            var bytes = new byte[client.ReceiveBufferSize];
+
+                            await stream.ReadAsync(bytes, 0, client.ReceiveBufferSize);
+
+                            string res = Encoding.UTF8.GetString(bytes);
+
+                            Console.WriteLine(res);
+                        }
                     }
                 }
 

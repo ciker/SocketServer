@@ -9,3 +9,5 @@
 /.vs
 /SocketServer.AB/obj
 /SocketServer.AB/bin/Debug/netcoreapp2.0
+/SocketServer.Protocol/obj
+/SocketServer.Protocol/bin/Debug/netstandard2.0
