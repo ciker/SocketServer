@@ -9,16 +9,7 @@ namespace SocketClient
 {
     class Program
     {
-        static int serverPort = 2017;
-
-        static IPEndPoint LocalEndPoint
-        {
-            get
-            {
-                IPHostEntry iPHostEntry = Dns.GetHostEntry("localhost");
-                return new IPEndPoint(iPHostEntry.AddressList[0], serverPort);
-            }
-        }
+        static int serverPort = 8082;
 
         static async Task Main(string[] args)
         {
@@ -27,7 +18,7 @@ namespace SocketClient
             {
                 using (var client = new TcpClient())
                 {
-                    await client.ConnectAsync("localhost", 8082);
+                    await client.ConnectAsync("localhost", serverPort);
 
                     if(client.Connected)
                     {
