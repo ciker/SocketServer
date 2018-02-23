@@ -5,14 +5,13 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 
-namespace SocketServer
+namespace SocketServer.AB
 {
     class Program
     {
         static int serverPort = 8082;
-
-        static TaskQueue TaskQueue = new TaskQueue(new ConcurrentQueue<Task>(), 10000, 10);
 
         static IPEndPoint LocalEndPoint
         {
@@ -23,11 +22,25 @@ namespace SocketServer
             }
         }
 
+        static ActionBlock<Tuple<byte[], int>> block = new ActionBlock<Tuple<byte[], int>>(_=> ProcessAsync(_),
+            new ExecutionDataflowBlockOptions {
+                BoundedCapacity = 10,
+                CancellationToken = default,
+                MaxDegreeOfParallelism = Environment.ProcessorCount
+            });
+
+        static async void ProcessAsync(Tuple<byte[], int> input)
+        {
+            //some long running task
+            await Task.Delay(1000);
+
+            string message = Encoding.UTF8.GetString(input.Item1, 0, input.Item2);
+
+            Console.WriteLine($"Processed:{message}");
+        }
+
         public static async Task Main(string[] args)
         {
-            // Subscrive to Queue Processing Events
-            TaskQueue.TaskStatus += OnDequeueTask;
-
             var listener = new TcpListener(LocalEndPoint);
             listener.Start();
 
@@ -53,16 +66,8 @@ namespace SocketServer
                 var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
                 if (bytesRead > 0)
                 {
-                    message = message + Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    block.Post(new Tuple<byte[], int>(buffer, bytesRead));
                 }
-
-                TaskQueue.Enqueue(async () =>
-                {
-                    //some long running task
-                    await Task.Delay(1000);
-
-                    Console.WriteLine($"Task Dequeued: {message}");
-                });
 
             }
             catch (Exception ex)
@@ -71,11 +76,6 @@ namespace SocketServer
             }
 
             Console.WriteLine(message);
-        }
-
-        private static void OnDequeueTask(TaskProcessingArguments e)
-        {
-            TaskQueue.DequeueTask();
         }
     }
 }

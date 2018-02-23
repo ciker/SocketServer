@@ -7,3 +7,5 @@
 /SocketClient/obj
 /SocketClient/bin/Debug
 /.vs
+/SocketServer.AB/obj
+/SocketServer.AB/bin/Debug/netcoreapp2.0
