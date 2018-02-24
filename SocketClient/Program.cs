@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using SocketServer.Protocols;
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -12,6 +13,8 @@ namespace SocketClient
     class Program
     {
         static int serverPort = 8082;
+        static BlockingCollection<QueueObject> blockingCollection
+    = new BlockingCollection<QueueObject>(new ConcurrentQueue<QueueObject>(), 10000);
 
         static async Task Main(string[] args)
         {

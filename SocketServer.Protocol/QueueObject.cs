@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
 
-namespace SocketServer.AB
+namespace SocketServer.Protocols
 {
     public class QueueObject
     {
