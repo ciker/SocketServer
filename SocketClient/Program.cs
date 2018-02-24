@@ -19,31 +19,56 @@ namespace SocketClient
         static async Task Main(string[] args)
         {
             int i = 0;
+
+            Task.Run(ProcessResponse);
+
             while (true)
             {
-                using (var client = new TcpClient())
+                var client = new TcpClient();
+
+                await client.ConnectAsync("localhost", serverPort);
+
+                if (client.Connected)
                 {
-                    await client.ConnectAsync("localhost", serverPort);
-
-                    if(client.Connected)
+                    var protocol = new Protocol
                     {
-                        var protocol = new Protocol
-                        {
-                            Id = Guid.NewGuid().ToString()
-                        };
+                        Id = Guid.NewGuid().ToString()
+                    };
 
-                        string serialized = JsonConvert.SerializeObject(protocol);
+                    string serialized = JsonConvert.SerializeObject(protocol);
 
-                        //string reqNo = $"request no: {Guid.NewGuid()}";
-                        Console.WriteLine(serialized);
+                    //string reqNo = $"request no: {Guid.NewGuid()}";
+                    Console.WriteLine(serialized);
 
+                    var stream = client.GetStream();
+
+                    var data = Encoding.ASCII.GetBytes(serialized);
+
+                    await stream.WriteAsync(data, 0, data.Length);
+
+                    blockingCollection.Add(new QueueObject
+                    {
+                        Client = client
+                    });
+
+                    await Task.Delay(1);
+
+                    i++;
+                }
+            }
+        }
+
+        static async Task ProcessResponse()
+        {
+            while(true)
+            {
+                if (blockingCollection.TryTake(out QueueObject output))
+                {
+                    using (TcpClient client = output.Client)
+                    {
                         var stream = client.GetStream();
 
-                        var data = Encoding.ASCII.GetBytes(serialized);
-
-                        await stream.WriteAsync(data, 0, data.Length);
-
-                        if(client.ReceiveBufferSize>0)
+                        if (output.Client.ReceiveBufferSize > 0)
                         {
                             var bytes = new byte[client.ReceiveBufferSize];
 
@@ -51,14 +76,13 @@ namespace SocketClient
 
                             string res = Encoding.UTF8.GetString(bytes);
 
-                            Console.WriteLine(res);
+                            var protocol = JsonConvert.DeserializeObject<Protocol>(res);
+
+                            Console.WriteLine($"response: {protocol.Id}");
+
                         }
                     }
                 }
-
-                await Task.Delay(1);
-
-                i++;
             }
         }
     }

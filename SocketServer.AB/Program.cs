@@ -133,7 +133,9 @@ namespace SocketServer.AB
                 {
                     NetworkStream stream = obj.Client.GetStream();
 
-                    var bytes = Encoding.UTF8.GetBytes($"response: {obj.Protocol.Id}");
+                    var serilized = JsonConvert.SerializeObject(obj.Protocol);
+
+                    var bytes = Encoding.UTF8.GetBytes(serilized);
 
                     await stream.WriteAsync(bytes, 0, bytes.Length);
                 }
