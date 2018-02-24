@@ -47,9 +47,6 @@ namespace SocketServer.AB
             {
                 int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
 
-                //var bytes = Encoding.UTF8.GetBytes($"response: {counter}");
-                //await stream.WriteAsync(bytes, 0, bytes.Length);
-
                 if (bytesRead > 0)
                 {
                     string content = Encoding.UTF8.GetString(buffer, 0, bytesRead);
@@ -66,9 +63,6 @@ namespace SocketServer.AB
                 Console.WriteLine(ex.Message);
             }
 
-            //Console.WriteLine(message);
-
-            //string message = Encoding.UTF8.GetString(input.Item1, 0, input.Item2);
 
         }
 
@@ -90,39 +84,8 @@ namespace SocketServer.AB
 
                 block.Post(socket);
 
-                //ProcessClient(socket);
-
                 counter++;
             }
-        }
-
-        private static async void ProcessClient(TcpClient client)
-        {
-            //var stream = client.GetStream();
-            //var buffer = new byte[4 * 1_024];
-
-            //string message = "";
-
-            //try
-            //{
-
-            //    var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
-
-            //    //var bytes = Encoding.UTF8.GetBytes($"response: {counter}");
-            //    //await stream.WriteAsync(bytes, 0, bytes.Length);
-
-            //    if (bytesRead > 0)
-            //    {
-            //        block.Post(new Tuple<byte[], int>(buffer, bytesRead));
-            //    }
-
-            //}
-            //catch (Exception ex)
-            //{
-            //    Console.WriteLine(ex.Message);
-            //}
-
-            //Console.WriteLine(message);
         }
 
         private static async Task DeQueueAsync()
